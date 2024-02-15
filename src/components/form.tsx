@@ -1,35 +1,40 @@
-import { Dispatch, FormEvent, SetStateAction } from "react"
+import { FormEvent } from "react"
 import { useForm } from "../hooks/useForm"
 import { InputForm } from "./input-form"
+import { Pacient } from "../context/patientContext"
+import { usePacient } from "../hooks/usePatient"
 
-export interface FormValues {
-    mascota: string;
-    duenio: string;
-    email: string;
-    raza: string;
-}
 
-export const Formulario = ({ setPacientes }: { setPacientes: Dispatch<SetStateAction<FormValues[]>> }) => {
+
+type FormValues = Omit<Pacient, 'id'>
+
+// export const Form = ({ setPacients }: { setPacients: Dispatch<SetStateAction<FormValues[]>> }) => {
+
+export const Form = () => {
+    const { savePacient } = usePacient()
 
     const { formValues, handleChange, reset } = useForm<FormValues>({
-        mascota: '',
-        raza: '',
-        duenio: '',
+        pet: '',
+        breed: '',
+        owner: '',
         email: ''
     })
-
+    const { pet, owner, email, breed } = formValues;
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault()
-        setPacientes((prev: FormValues[]) => {
-            return [...prev, formValues]
-        })
+
+        const newPacient = {
+            id: crypto.randomUUID(),
+            ...formValues
+        }
+        savePacient(newPacient)
         reset()
     }
 
     return (
         <div className="md:w-1/2 lg:w-2/5">
             <h2 className="font-bold text-3x1 mb-10 text-center">
-                Registrar
+                Registrar{' '}
                 <span className="text-indigo-700">
                     Nuevo Paciente
                 </span>
@@ -38,24 +43,27 @@ export const Formulario = ({ setPacientes }: { setPacientes: Dispatch<SetStateAc
                     onSubmit={handleSubmit}>
                     <InputForm
                         label="Mascota"
-                        name="mascota"
+                        name="pet"
                         type="text"
-                        placeholder="Nombre de la mascota"
+                        placeholder="Nombre de la pet"
                         onChange={handleChange}
+                        value={pet}
                     />
                     <InputForm
                         label="Raza"
-                        name="raza"
+                        name="breed"
                         type="text"
-                        placeholder="Nombre de la raza"
+                        placeholder="Nombre de la breed"
                         onChange={handleChange}
+                        value={breed}
                     />
                     <InputForm
                         label="Dueño"
-                        name="duenio"
+                        name="owner"
                         type="text"
                         placeholder="Nombre del dueño"
                         onChange={handleChange}
+                        value={owner}
                     />
                     <InputForm
                         label="Email"
@@ -63,6 +71,7 @@ export const Formulario = ({ setPacientes }: { setPacientes: Dispatch<SetStateAc
                         type="text"
                         placeholder="Email de contacto"
                         onChange={handleChange}
+                        value={email}
                     />
                     <button
                         type="submit"
