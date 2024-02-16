@@ -1,8 +1,9 @@
-import { FormEvent } from "react"
+import { FormEvent, useState } from "react"
 import { useForm } from "../hooks/useForm"
 import { InputForm } from "./input-form"
 import { Pacient } from "../context/patientContext"
 import { usePacient } from "../hooks/usePatient"
+import { schemaFormAddPatient } from "../validations/schema-form-add"
 
 
 
@@ -12,6 +13,7 @@ type FormValues = Omit<Pacient, 'id'>
 
 export const Form = () => {
     const { savePacient } = usePacient()
+    const [errors, setErrors] = useState<FormValues>({} as FormValues)
 
     const { formValues, handleChange, reset } = useForm<FormValues>({
         pet: '',
@@ -22,13 +24,29 @@ export const Form = () => {
     const { pet, owner, email, breed } = formValues;
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault()
-
-        const newPacient = {
-            id: crypto.randomUUID(),
-            ...formValues
+        const result = schemaFormAddPatient.validate(formValues, {
+            abortEarly: false
+        })
+        if (result.error) {
+            setErrors(result.error.details.reduce((acc, err) => {
+                const inputName = err.context?.key as string;
+                const message = err.message;
+                return {
+                    ...acc,
+                    [inputName]: message
+                };
+            }, {} as FormValues))
+        } else {
+            const newPacient = {
+                id: crypto.randomUUID(),
+                ...formValues
+            }
+            savePacient(newPacient)
+            setErrors({} as FormValues)
+            reset()
         }
-        savePacient(newPacient)
-        reset()
+
+
     }
 
     return (
@@ -48,6 +66,7 @@ export const Form = () => {
                         placeholder="Nombre de la pet"
                         onChange={handleChange}
                         value={pet}
+                        error={errors.pet}
                     />
                     <InputForm
                         label="Raza"
@@ -56,6 +75,7 @@ export const Form = () => {
                         placeholder="Nombre de la breed"
                         onChange={handleChange}
                         value={breed}
+                        error={errors.breed}
                     />
                     <InputForm
                         label="Dueño"
@@ -64,6 +84,7 @@ export const Form = () => {
                         placeholder="Nombre del dueño"
                         onChange={handleChange}
                         value={owner}
+                        error={errors.owner}
                     />
                     <InputForm
                         label="Email"
@@ -72,6 +93,7 @@ export const Form = () => {
                         placeholder="Email de contacto"
                         onChange={handleChange}
                         value={email}
+                        error={errors.email}
                     />
                     <button
                         type="submit"
